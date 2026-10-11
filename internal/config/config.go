@@ -16,6 +16,10 @@ type Config struct {
 	IdleTimeout       time.Duration `env:"IDLE_TIMEOUT" envDefault:"60s"`
 	ShutdownTimeout   time.Duration `env:"SHUTDOWN_TIMEOUT" envDefault:"10s"`
 	MaxHeaderBytes    int           `env:"MAX_HEADER_BYTES" envDefault:"1048576"`
+	RateLimit         int           `env:"RATE_LIMIT" envDefault:"100"`
+	RateLimitWindow   time.Duration `env:"RATE_LIMIT_WINDOW" envDefault:"1m"`
+	// Short, because file names carry no version: a deploy changes a file but not its URL.
+	StaticCacheControl string `env:"STATIC_CACHE_CONTROL" envDefault:"public, max-age=3600"`
 }
 
 func Load() (Config, error) {
