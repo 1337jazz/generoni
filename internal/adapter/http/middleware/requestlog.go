@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-// RequestLog logs one line per request once it has finished. It runs in a
-// defer, so a panic further down is still logged before Recover answers.
+// RequestLog logs one line per request once it has finished. It must wrap
+// Recover, so a recovered panic is logged with the 500 that Recover wrote.
 func RequestLog(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
@@ -19,8 +19,7 @@ func RequestLog(next http.Handler) http.Handler {
 				slog.String("path", r.URL.Path),
 				slog.Int("status", rec.status),
 				slog.Int64("bytes", rec.written),
-				slog.Duration("duration", time.Since(start)),
-				slog.String("request_id", RequestIDFrom(r.Context())),
+				slog.Float64("duration_ms", float64(time.Since(start).Microseconds())/1000),
 			)
 		}()
 

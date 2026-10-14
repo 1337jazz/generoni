@@ -41,8 +41,11 @@ func (r *ItemRepository) Get(ctx context.Context, id int64) (*domain.Item, error
 	return itemRowToDomain(row), nil
 }
 
-func (r *ItemRepository) List(ctx context.Context) ([]*domain.Item, error) {
-	rows, err := r.queries.ListItems(ctx)
+func (r *ItemRepository) List(ctx context.Context, page domain.Pagination) ([]*domain.Item, error) {
+	rows, err := r.queries.ListItems(ctx, queries.ListItemsParams{
+		Limit:  page.Limit,
+		Offset: page.Offset,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("list items: %w", err)
 	}
@@ -51,4 +54,12 @@ func (r *ItemRepository) List(ctx context.Context) ([]*domain.Item, error) {
 		items[i] = itemRowToDomain(row)
 	}
 	return items, nil
+}
+
+func (r *ItemRepository) Count(ctx context.Context) (int64, error) {
+	total, err := r.queries.CountItems(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("count items: %w", err)
+	}
+	return total, nil
 }

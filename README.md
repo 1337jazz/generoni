@@ -22,6 +22,7 @@ internal/
   core/
     domain/                            entities, their rules and expected errors
       item.go                          Item, NewItem
+      pagination.go                    Pagination, NewPagination
       errors.go                        Kind, Error, NewError, Err* values
     port/                              interfaces the core needs and offers
       item.go                          ItemService, ItemRepository
@@ -32,16 +33,16 @@ internal/
     container/container.go             builds DB, repositories, services, handlers
     logger/logger.go                   slog setup, JSON only
     http/
-      server.go                        http.Server, routes, health, not found
+      server.go                        http.Server, routes, health
       respond/respond.go               Decode, JSON, Error: {"error":{"code"}},
                                        HTTP errors, Kind to status
       middleware/                      recover, requestid, requestlog,
-                                       security, ratelimit
+                                       security, ratelimit, timeout
       handlers/                        one package per entity
         item/
           handler.go                   ItemHandler: Get, List, Create
           dto.go                       request and response shapes
-          validation.go                path and query parsing
+          validation.go                path and query parsing, pagination
     storage/
       sqlite/
         db.go                          driver, pragmas, Open, Migrate

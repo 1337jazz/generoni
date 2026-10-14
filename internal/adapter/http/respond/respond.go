@@ -1,8 +1,10 @@
 package respond
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"log/slog"
 	"net/http"
 
@@ -14,7 +16,8 @@ const maxBodyBytes = 1 << 20
 var (
 	ErrInternal      = domain.NewError("internal_error", domain.KindInternal)
 	ErrMalformedBody = domain.NewError("malformed_body", domain.KindInvalidArgument)
-	ErrNotFound      = domain.NewError("not_found", domain.KindNotFound)
+	ErrBodyTooLarge  = domain.NewError("body_too_large", domain.KindTooLarge)
+	ErrTimeout       = domain.NewError("timeout", domain.KindUnavailable)
 )
 
 type errorBody struct {
@@ -29,6 +32,12 @@ func Decode(w http.ResponseWriter, r *http.Request, v any) error {
 	dec := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxBodyBytes))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(v); err != nil {
+		if _, ok := errors.AsType[*http.MaxBytesError](err); ok {
+			return ErrBodyTooLarge
+		}
+		return ErrMalformedBody
+	}
+	if _, err := dec.Token(); !errors.Is(err, io.EOF) {
 		return ErrMalformedBody
 	}
 	return nil
@@ -50,7 +59,12 @@ func JSON(w http.ResponseWriter, r *http.Request, status int, v any) {
 
 func Error(w http.ResponseWriter, r *http.Request, err error) {
 	appErr, ok := errors.AsType[*domain.Error](err)
-	if !ok {
+	switch {
+	case ok:
+	case errors.Is(r.Context().Err(), context.DeadlineExceeded):
+		slog.WarnContext(r.Context(), "request timed out", "error", err)
+		appErr = ErrTimeout
+	default:
 		slog.ErrorContext(r.Context(), "unexpected error", "error", err)
 		appErr = ErrInternal
 	}
@@ -63,6 +77,10 @@ func statusFor(kind domain.Kind) int {
 		return http.StatusBadRequest
 	case domain.KindNotFound:
 		return http.StatusNotFound
+	case domain.KindTooLarge:
+		return http.StatusRequestEntityTooLarge
+	case domain.KindUnavailable:
+		return http.StatusServiceUnavailable
 	default:
 		return http.StatusInternalServerError
 	}

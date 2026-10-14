@@ -28,6 +28,7 @@ func Open(ctx context.Context, path string) (*sql.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open database: %w", err)
 	}
+	db.SetMaxOpenConns(1)
 
 	if err := db.PingContext(ctx); err != nil {
 		db.Close()

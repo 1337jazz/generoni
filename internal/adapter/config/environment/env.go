@@ -13,6 +13,7 @@ type Config struct {
 	ReadHeaderTimeout time.Duration `env:"READ_HEADER_TIMEOUT" envDefault:"5s"`
 	ReadTimeout       time.Duration `env:"READ_TIMEOUT" envDefault:"15s"`
 	WriteTimeout      time.Duration `env:"WRITE_TIMEOUT" envDefault:"15s"`
+	RequestTimeout    time.Duration `env:"REQUEST_TIMEOUT" envDefault:"10s"`
 	IdleTimeout       time.Duration `env:"IDLE_TIMEOUT" envDefault:"60s"`
 	ShutdownTimeout   time.Duration `env:"SHUTDOWN_TIMEOUT" envDefault:"10s"`
 	MaxHeaderBytes    int           `env:"MAX_HEADER_BYTES" envDefault:"1048576"`

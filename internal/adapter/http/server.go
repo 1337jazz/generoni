@@ -7,7 +7,6 @@ import (
 	"github.com/1337jazz/generoni/internal/adapter/config/environment"
 	"github.com/1337jazz/generoni/internal/adapter/container"
 	"github.com/1337jazz/generoni/internal/adapter/http/middleware"
-	"github.com/1337jazz/generoni/internal/adapter/http/respond"
 	"github.com/justinas/alice"
 )
 
@@ -40,15 +39,16 @@ func (s *Server) routes(cfg environment.Config) http.Handler {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", s.healthHandler)
+	mux.HandleFunc("GET /panic", s.panicHandler)
 	mux.Handle("GET /items", limited.ThenFunc(itemHandler.List))
 	mux.Handle("POST /items", limited.ThenFunc(itemHandler.Create))
 	mux.Handle("GET /items/{id}", limited.ThenFunc(itemHandler.Get))
-	mux.Handle("GET /", limited.ThenFunc(s.notFoundHandler))
 
 	global := alice.New(
-		middleware.Recover,
 		middleware.RequestID,
 		middleware.RequestLog,
+		middleware.Recover,
+		middleware.Timeout(cfg.RequestTimeout),
 		middleware.SecureHeaders,
 		http.NewCrossOriginProtection().Handler,
 	)
@@ -61,6 +61,6 @@ func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 }
 
-func (s *Server) notFoundHandler(w http.ResponseWriter, r *http.Request) {
-	respond.Error(w, r, respond.ErrNotFound)
+func (s *Server) panicHandler(w http.ResponseWriter, r *http.Request) {
+	panic("test panic")
 }

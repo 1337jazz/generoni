@@ -9,6 +9,17 @@ import (
 	"context"
 )
 
+const countItems = `-- name: CountItems :one
+SELECT count(*) FROM items
+`
+
+func (q *Queries) CountItems(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countItems)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createItem = `-- name: CreateItem :one
 INSERT INTO items (title) VALUES (?) RETURNING id, title, created_at
 `
@@ -32,11 +43,16 @@ func (q *Queries) GetItem(ctx context.Context, id int64) (Item, error) {
 }
 
 const listItems = `-- name: ListItems :many
-SELECT id, title, created_at FROM items ORDER BY id DESC
+SELECT id, title, created_at FROM items ORDER BY id DESC LIMIT ? OFFSET ?
 `
 
-func (q *Queries) ListItems(ctx context.Context) ([]Item, error) {
-	rows, err := q.db.QueryContext(ctx, listItems)
+type ListItemsParams struct {
+	Limit  int64
+	Offset int64
+}
+
+func (q *Queries) ListItems(ctx context.Context, arg ListItemsParams) ([]Item, error) {
+	rows, err := q.db.QueryContext(ctx, listItems, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

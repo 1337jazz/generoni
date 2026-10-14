@@ -69,6 +69,7 @@ func run(cfg environment.Config) error {
 	case err := <-errc:
 		return err
 	case <-ctx.Done():
+		stop()
 	}
 
 	slog.Info("shutting down")

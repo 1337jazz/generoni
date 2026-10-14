@@ -33,17 +33,19 @@ func (h *ItemHandler) Get(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ItemHandler) List(w http.ResponseWriter, r *http.Request) {
-	items, err := h.service.List(r.Context())
+	page, err := validateListItems(r.URL.Query())
 	if err != nil {
 		respond.Error(w, r, err)
 		return
 	}
 
-	res := make([]itemResponse, len(items))
-	for i, item := range items {
-		res[i] = itemToResponse(item)
+	items, total, err := h.service.List(r.Context(), page)
+	if err != nil {
+		respond.Error(w, r, err)
+		return
 	}
-	respond.JSON(w, r, http.StatusOK, res)
+
+	respond.JSON(w, r, http.StatusOK, itemPageToResponse(items, total))
 }
 
 func (h *ItemHandler) Create(w http.ResponseWriter, r *http.Request) {

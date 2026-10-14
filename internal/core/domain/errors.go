@@ -6,6 +6,8 @@ const (
 	KindInternal        Kind = "internal_error"
 	KindInvalidArgument Kind = "invalid_request"
 	KindNotFound        Kind = "not_found"
+	KindTooLarge        Kind = "too_large"
+	KindUnavailable     Kind = "unavailable"
 )
 
 type Error struct {
@@ -26,4 +28,6 @@ var (
 	ErrInvalidItemID = NewError("invalid_item_id", KindInvalidArgument)
 	ErrTitleRequired = NewError("title_required", KindInvalidArgument)
 	ErrTitleTooLong  = NewError("title_too_long", KindInvalidArgument)
+	ErrInvalidLimit  = NewError("invalid_limit", KindInvalidArgument)
+	ErrInvalidOffset = NewError("invalid_offset", KindInvalidArgument)
 )

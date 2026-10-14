@@ -25,7 +25,6 @@ func Recover(next http.Handler) http.Handler {
 
 			slog.LogAttrs(r.Context(), slog.LevelError, "panic",
 				slog.Any("value", rec),
-				slog.String("request_id", RequestIDFrom(r.Context())),
 				slog.String("stack", string(debug.Stack())),
 			)
 
