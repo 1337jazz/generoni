@@ -1,85 +1,85 @@
 # generoni
 
-An opinionated, production-ready template for Go web apps 'cos I got tired of copy and pasting.
+An opinionated, production-ready template for Go REST APIs 'cos I got tired of copy and pasting.
 
 Click **Use this template** to create your own repo. The rename script handles, well, the renaming.
 
 ## Stack
 
-- `net/http` standard library
-- `html/template` for server rendering
-- htmx + Alpine.js (CSP build)
-- Tailwind CSS via the standalone CLI
+- `net/http` standard library, JSON in and out
 - SQLite with sqlc and golang-migrate
 - air for hot reload
 - Multi-stage Docker build to a distroless image
 
 ## Layout
 
-Ports and adapters, following Ben Johnson's [Standard Package Layout][spl].
-Entries marked `TODO` are planned, not written yet.
+Hexagonal (ports and adapters). `core` holds the business logic, `adapter`
+holds everything that talks to the outside world, and `container` wires them.
 
 ```
-sqlc.yaml                          sqlc config                            TODO
-cmd/server/
-  main.go                          wiring: config, logger, server, routes
+cmd/server/main.go                     config, logger, container, server, shutdown
 internal/
-  config/config.go                 env to typed struct, fails fast
-  logging/logging.go               slog setup
-  middleware/                      recover, requestid, requestlog,
-                                   security, ratelimit, cache, nodirlist
-  handlers/
-    health.go  pages.go            handlers with no dependencies
-    item.go                        handlers that take the service        TODO
-  item/                            THE DOMAIN. imports nothing of ours   TODO
-    item.go                        Item, Title (validated), ErrNotFound
-    service.go                     Service: Create, List, Get
-    repo.go                        type Repo interface, the port
-    service_test.go                unit tests against a fake Repo
-  storage/
-    sqlite/                        the driven adapter                    TODO
-      sqlite.go                    driver, pragmas, migrate on boot
-      item.go                      implements item.Repo
-      mapper.go                    db.Item to item.Item and back
-      item_test.go                 against a temp .db file
-      queries.sql                  hand written SQL, sqlc INPUT
-      migrations/                  golang-migrate, embedded
-        0001_init.up.sql
-        0001_init.down.sql
-      db/                          sqlc OUTPUT. generated, committed,
-        db.go                      never edited by hand
-        models.go
-        queries.sql.go
-web/
-  web.go                           go:embed of templates and static
-  templates/                       base, home, 404, 500
-  static/                          style.css
-data/                              gitignored, holds the .db file        TODO
+  core/
+    domain/                            entities, their rules and expected errors
+      item.go                          Item, NewItem
+      errors.go                        Kind, Error, NewError, Err* values
+    port/                              interfaces the core needs and offers
+      item.go                          ItemService, ItemRepository
+    service/                           business logic, one package per entity
+      item/service.go
+  adapter/
+    config/environment/env.go          env to typed struct, fails fast
+    container/container.go             builds DB, repositories, services, handlers
+    logger/logger.go                   slog setup, JSON only
+    http/
+      server.go                        http.Server, routes, health, not found
+      respond/respond.go               Decode, JSON, Error: {"error":{"code"}},
+                                       HTTP errors, Kind to status
+      middleware/                      recover, requestid, requestlog,
+                                       security, ratelimit
+      handlers/                        one package per entity
+        item/
+          handler.go                   ItemHandler: Get, List, Create
+          dto.go                       request and response shapes
+          validation.go                path and query parsing
+    storage/
+      sqlite/
+        db.go                          driver, pragmas, Open, Migrate
+        item_repository.go             implements port.ItemRepository
+        mapper.go                      queries.Item to domain.Item
+        sqlc.yaml                      sqlc config
+        query.sql                      hand written SQL, sqlc INPUT
+        migrations/                    golang-migrate, embedded
+          000001_init.up.sql
+          000001_init.down.sql
+        queries/                       sqlc OUTPUT. generated, committed,
+          db.go                        never edited by hand
+          models.go
+          query.sql.go
+data/                                  gitignored, holds the .db file
 ```
 
 ### Dependency direction
 
 ```
-handlers --> item <-- storage/sqlite
-              ^
-       imports nothing
+adapter/http/handlers --> core/port <-- core/service --> core/port <-- adapter/storage
+                              |
+                         core/domain
 ```
 
-`item` never imports `database/sql`, sqlc or `net/http`. Both arrows point
-inward, so the domain does not move when the database or the transport does.
+`core` never imports an adapter. Handlers depend on `port.ItemService`, the
+service depends on `port.ItemRepository`, and only `container` knows which
+concrete types fill them.
 
-### Deviations from Standard Package Layout
+### Adding an entity
 
-Two, both deliberate:
-
-1. **Domain types live in `internal/item`, not the root package.** The root
-   package would be named after the repository, and a repository called
-   `my-app` gives `package my-app`, which is not a valid Go identifier. The
-   rename script makes the canonical form impossible.
-2. **Adapters live under `internal/`, not at the root.** Nobody should import
-   this app's adapters from outside it.
-
-[spl]: https://www.gobeyond.dev/standard-package-layout/
+1. `core/domain/<entity>.go` with its constructor and rules, and its errors in `core/domain/errors.go`
+2. `core/port/<entity>.go` with the service and repository interfaces
+3. `core/service/<entity>/service.go`
+4. A migration, queries in `query.sql`, then `sqlc generate -f internal/adapter/storage/sqlite/sqlc.yaml`
+5. `adapter/storage/sqlite/<entity>_repository.go` and its mapper
+6. `adapter/http/handlers/<entity>/` with `handler.go`, `dto.go`, `validation.go`
+7. Wire it in `container.go` and add the routes in `server.go`
 
 ## Licence
 

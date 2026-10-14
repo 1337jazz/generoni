@@ -1,10 +1,10 @@
-package logging
+package logger
 
 import (
 	"log/slog"
 	"os"
 )
 
-func Init(level slog.Level) {
+func Setup(level slog.Level) {
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level})))
 }

@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"github.com/1337jazz/generoni/internal/handlers"
+	"github.com/1337jazz/generoni/internal/adapter/http/respond"
 )
 
-// Recover turns a panic into the 500 page. Without it net/http drops the
+// Recover turns a panic into a 500 response. Without it net/http drops the
 // connection and the client sees nothing.
 func Recover(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -29,8 +29,8 @@ func Recover(next http.Handler) http.Handler {
 				slog.String("stack", string(debug.Stack())),
 			)
 
-			// Show the 500 page, but never leak the panic to the client.
-			handlers.ServerError(w, r)
+			// Answer 500, but never leak the panic to the client.
+			respond.Error(w, r, respond.ErrInternal)
 		}()
 		next.ServeHTTP(w, r)
 	})
