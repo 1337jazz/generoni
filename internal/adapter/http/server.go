@@ -50,7 +50,6 @@ func (s *Server) routes(cfg environment.Config) http.Handler {
 		middleware.Recover,
 		middleware.Timeout(cfg.RequestTimeout),
 		middleware.SecureHeaders,
-		http.NewCrossOriginProtection().Handler,
 	)
 	return global.Then(mux)
 }
