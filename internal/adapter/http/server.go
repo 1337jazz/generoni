@@ -55,6 +55,10 @@ func (s *Server) routes(cfg environment.Config) http.Handler {
 	mux.Handle("GET /v1/items", protected.ThenFunc(itemHandler.List))
 	mux.Handle("POST /v1/items", protected.ThenFunc(itemHandler.Create))
 	mux.Handle("GET /v1/items/{id}", protected.ThenFunc(itemHandler.Get))
+	mux.Handle("GET /v1/", http.NotFoundHandler()) // unknown API paths stay 404, not index.html
+
+	// The frontend. Keep this last: "GET /" is the fallback for every other path
+	mux.Handle("GET /", spa())
 
 	return global.Then(mux)
 }

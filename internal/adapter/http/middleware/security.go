@@ -8,7 +8,7 @@ func SecureHeaders(next http.Handler) http.Handler {
 		h := w.Header()
 		h.Set("X-Content-Type-Options", "nosniff")
 		h.Set("X-Frame-Options", "DENY")
-		h.Set("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'")
+		h.Set("Content-Security-Policy", "default-src 'self'; frame-ancestors 'none'")
 		next.ServeHTTP(w, r)
 	})
 }
