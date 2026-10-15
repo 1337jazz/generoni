@@ -1,8 +1,7 @@
 name: ci
 
-# TEMP: disabled. Restore `pull_request:` here to run on every PR.
 on:
-  workflow_dispatch:
+  pull_request:
 
 permissions:
   contents: read

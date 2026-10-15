@@ -8,8 +8,7 @@ import (
 	"github.com/1337jazz/generoni/internal/adapter/http/clientip"
 )
 
-// RequestLog logs one line per request once it has finished. It must wrap
-// Recover, so a recovered panic is logged with the 500 that Recover wrote.
+// RequestLog logs one line per request once it has finished
 func RequestLog(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()

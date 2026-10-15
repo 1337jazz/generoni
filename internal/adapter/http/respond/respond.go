@@ -12,8 +12,7 @@ import (
 )
 
 const (
-	maxBodyBytes = 1 << 20
-
+	maxBodyBytes                         = 1 << 20 // 1MiB
 	kindUnsupportedMediaType domain.Kind = "unsupported_media_type"
 )
 

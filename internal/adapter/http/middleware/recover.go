@@ -18,7 +18,7 @@ func Recover(next http.Handler) http.Handler {
 				return
 			}
 			// net/http uses this panic to mean "drop the connection on
-			// purpose", so pass it on instead of answering.
+			// purpose", so pass it on instead of answering...
 			if rec == http.ErrAbortHandler {
 				panic(rec)
 			}
@@ -28,7 +28,7 @@ func Recover(next http.Handler) http.Handler {
 				slog.String("stack", string(debug.Stack())),
 			)
 
-			// Answer 500, but never leak the panic to the client.
+			// Answer 500, don't leak the panic
 			respond.Error(w, r, respond.ErrInternal)
 		}()
 		next.ServeHTTP(w, r)

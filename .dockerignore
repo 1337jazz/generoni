@@ -1,7 +1,5 @@
-.git
-.env
-bin
-tmp
-data
-Dockerfile
-.dockerignore
+*
+!go.mod
+!go.sum
+!cmd
+!internal

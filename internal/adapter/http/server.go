@@ -29,9 +29,7 @@ func NewServer(cfg environment.Config, cntr *container.Container) *Server {
 	return s
 }
 
-// routes builds the handler for the whole application. The global chain
-// wraps every route, and the protected chain adds rate limiting and auth to
-// the routes that need them
+// routes builds the handler for the whole application
 func (s *Server) routes(cfg environment.Config) http.Handler {
 	itemHandler := s.cntr.ItemHandler
 

@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 
 	"github.com/golang-migrate/migrate/v4"
-	migratesqlite "github.com/golang-migrate/migrate/v4/database/sqlite"
+	_ "github.com/golang-migrate/migrate/v4/database/sqlite"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	_ "modernc.org/sqlite"
 )
@@ -38,6 +38,8 @@ func Open(ctx context.Context, path string) (*sql.DB, error) {
 	return db, nil
 }
 
+// dsn returns a data source name for the SQLite database at the given path, with
+// the some default pragmas and options
 func dsn(path string) string {
 	params := url.Values{}
 	params.Add("_pragma", "foreign_keys(1)")
@@ -48,21 +50,17 @@ func dsn(path string) string {
 	return "file:" + path + "?" + params.Encode()
 }
 
-func Migrate(db *sql.DB) error {
+func Migrate(path string) error {
 	source, err := iofs.New(migrations, "migrations")
 	if err != nil {
 		return fmt.Errorf("migrate: open source: %w", err)
 	}
 
-	driver, err := migratesqlite.WithInstance(db, &migratesqlite.Config{})
-	if err != nil {
-		return fmt.Errorf("migrate: open driver: %w", err)
-	}
-
-	m, err := migrate.NewWithInstance("iofs", source, "sqlite", driver)
+	m, err := migrate.NewWithSourceInstance("iofs", source, "sqlite://"+path)
 	if err != nil {
 		return fmt.Errorf("migrate: create instance: %w", err)
 	}
+	defer m.Close()
 
 	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		return fmt.Errorf("migrate: apply: %w", err)
