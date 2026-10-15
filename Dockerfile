@@ -17,8 +17,9 @@ FROM gcr.io/distroless/static-debian12:nonroot
 COPY --from=build /out/server /server
 COPY --from=build --chown=nonroot:nonroot /out/data /data
 
+WORKDIR /
+
 EXPOSE 8080
-VOLUME /data
 USER nonroot:nonroot
 
 ENTRYPOINT ["/server"]

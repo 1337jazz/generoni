@@ -82,6 +82,15 @@ concrete types fill them.
 6. `adapter/http/handlers/<entity>/` with `handler.go`, `dto.go`, `validation.go`
 7. Wire it in `container.go` and add the routes in `server.go`
 
+## Deployment
+
+### Run one instance
+
+SQLite is a local file and the rate limiter lives in memory, so run a single instance.
+Several instances can't safely share one SQLite file, and each would count rate limits on
+its own. To scale out, move to a shared database (e.g. Postgres) and a shared rate limiter
+(e.g. Redis).
+
 ## Licence
 
 MIT
