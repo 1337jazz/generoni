@@ -2,7 +2,8 @@
 
 An opinionated, production-ready template for Go REST APIs 'cos I got tired of copy and pasting.
 
-Click **Use this template** to create your own repo. The rename script handles, well, the renaming.
+Click **Use this template** to create your own repo. A workflow renames the module path and this
+title on the first push, then deletes itself.
 
 ## Stack
 
@@ -37,7 +38,7 @@ internal/
       respond/respond.go               Decode, JSON, Error: {"error":{"code"}},
                                        HTTP errors, Kind to status
       middleware/                      recover, requestid, requestlog,
-                                       security, ratelimit, timeout
+                                       security, ratelimit, auth (stub), timeout
       handlers/                        one package per entity
         item/
           handler.go                   ItemHandler: Get, List, Create
@@ -90,6 +91,23 @@ SQLite is a local file and the rate limiter lives in memory, so run a single ins
 Several instances can't safely share one SQLite file, and each would count rate limits on
 its own. To scale out, move to a shared database (e.g. Postgres) and a shared rate limiter
 (e.g. Redis).
+
+### Persist the database
+
+Mount a volume at `/data`, for example `docker run -p 8080:8080 -v app-data:/data <image>`.
+Without it the SQLite file lives inside the container and is lost when the container is
+removed.
+
+### Back up the database
+
+The SQLite file is the only copy of your data. Take volume or disk snapshots with your
+host, or stream it continuously to S3-compatible storage with Litestream.
+
+### Run behind one trusted proxy
+
+The client IP is the right-most `X-Forwarded-For` value, so the app assumes exactly one
+trusted proxy in front of it that appends the address it saw. Never expose the app
+directly. A client could then forge the header and bypass the rate limit.
 
 ## Licence
 

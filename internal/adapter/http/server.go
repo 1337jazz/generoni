@@ -30,8 +30,8 @@ func NewServer(cfg environment.Config, cntr *container.Container) *Server {
 }
 
 // routes builds the handler for the whole application. The global chain
-// wraps every route, and the limited chain adds rate limiting to the routes
-// that need it
+// wraps every route, and the protected chain adds rate limiting and auth to
+// the routes that need them
 func (s *Server) routes(cfg environment.Config) http.Handler {
 	itemHandler := s.cntr.ItemHandler
 
@@ -45,15 +45,18 @@ func (s *Server) routes(cfg environment.Config) http.Handler {
 		middleware.SecureHeaders,
 	)
 
-	// "limited" middleware is applied to routes that need rate limiting
-	limited := alice.New(middleware.RateLimit(cfg.RateLimit, cfg.RateLimitWindow))
+	// "protected" middleware is applied to routes that need rate limiting and auth
+	protected := alice.New(
+		middleware.RateLimit(cfg.RateLimit, cfg.RateLimitWindow),
+		middleware.Auth,
+	)
 
 	// Start building the routes
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", s.healthHandler)
-	mux.Handle("GET /items", limited.ThenFunc(itemHandler.List))
-	mux.Handle("POST /items", limited.ThenFunc(itemHandler.Create))
-	mux.Handle("GET /items/{id}", limited.ThenFunc(itemHandler.Get))
+	mux.Handle("GET /v1/items", protected.ThenFunc(itemHandler.List))
+	mux.Handle("POST /v1/items", protected.ThenFunc(itemHandler.Create))
+	mux.Handle("GET /v1/items/{id}", protected.ThenFunc(itemHandler.Get))
 
 	return global.Then(mux)
 }
