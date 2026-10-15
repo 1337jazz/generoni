@@ -10,7 +10,7 @@
 ## Should have
 
 - [x] Slim `go.mod`: run air via `go run ...@version` in the Makefile, not a `tool` directive.
-- [ ] Extend the Makefile: `test`, `lint`, `vet`, `sqlc`, `docker`.
+- [x] Extend the Makefile: `test`, `vet`, `sqlc`, `docker`, `migrate-new/up/down`.
 - [ ] Validate config on load: `RATE_LIMIT > 0`, `RATE_LIMIT_WINDOW > 0`,
       `REQUEST_TIMEOUT < WRITE_TIMEOUT`.
 - [ ] Return JSON for mux 404 and 405 (currently plain text).
