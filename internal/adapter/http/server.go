@@ -35,15 +35,8 @@ func NewServer(cfg environment.Config, cntr *container.Container) *Server {
 func (s *Server) routes(cfg environment.Config) http.Handler {
 	itemHandler := s.cntr.ItemHandler
 
-	limited := alice.New(middleware.RateLimit(cfg.RateLimit, cfg.RateLimitWindow))
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /healthz", s.healthHandler)
-	mux.HandleFunc("GET /panic", s.panicHandler)
-	mux.Handle("GET /items", limited.ThenFunc(itemHandler.List))
-	mux.Handle("POST /items", limited.ThenFunc(itemHandler.Create))
-	mux.Handle("GET /items/{id}", limited.ThenFunc(itemHandler.Get))
-
+	// Set up middleware chains
+	// "global" middleware is applied to every route (apart from healthz)
 	global := alice.New(
 		middleware.RequestID,
 		middleware.RequestLog,
@@ -51,6 +44,17 @@ func (s *Server) routes(cfg environment.Config) http.Handler {
 		middleware.Timeout(cfg.RequestTimeout),
 		middleware.SecureHeaders,
 	)
+
+	// "limited" middleware is applied to routes that need rate limiting
+	limited := alice.New(middleware.RateLimit(cfg.RateLimit, cfg.RateLimitWindow))
+
+	// Start building the routes
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /healthz", s.healthHandler)
+	mux.Handle("GET /items", limited.ThenFunc(itemHandler.List))
+	mux.Handle("POST /items", limited.ThenFunc(itemHandler.Create))
+	mux.Handle("GET /items/{id}", limited.ThenFunc(itemHandler.Get))
+
 	return global.Then(mux)
 }
 
@@ -58,8 +62,4 @@ func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
-}
-
-func (s *Server) panicHandler(w http.ResponseWriter, r *http.Request) {
-	panic("test panic")
 }

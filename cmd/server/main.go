@@ -28,6 +28,7 @@ func main() {
 	logger.Setup(cfg.LogLevel)
 
 	// Run with graceful shutdown
+	slog.Info("starting")
 	if err := run(cfg); err != nil {
 		slog.Error("server failed", "error", err)
 		os.Exit(1)
