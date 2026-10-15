@@ -13,4 +13,4 @@ build:
 	CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o $(BUILD_DIR)/$(APP_NAME) ./cmd/$(APP_NAME)
 
 dev:
-	@go tool air
+	@go run github.com/air-verse/air@v1.67.4
