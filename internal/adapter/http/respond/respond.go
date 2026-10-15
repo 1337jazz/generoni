@@ -4,20 +4,25 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"io"
 	"log/slog"
+	"mime"
 	"net/http"
 
 	"github.com/1337jazz/generoni/internal/core/domain"
 )
 
-const maxBodyBytes = 1 << 20
+const (
+	maxBodyBytes = 1 << 20
+
+	kindUnsupportedMediaType domain.Kind = "unsupported_media_type"
+)
 
 var (
-	ErrInternal      = domain.NewError("internal_error", domain.KindInternal)
-	ErrMalformedBody = domain.NewError("malformed_body", domain.KindInvalidArgument)
-	ErrBodyTooLarge  = domain.NewError("body_too_large", domain.KindTooLarge)
-	ErrTimeout       = domain.NewError("timeout", domain.KindUnavailable)
+	ErrInternal             = domain.NewError("internal_error", domain.KindInternal)
+	ErrMalformedBody        = domain.NewError("malformed_body", domain.KindInvalidArgument)
+	ErrBodyTooLarge         = domain.NewError("body_too_large", domain.KindTooLarge)
+	ErrUnsupportedMediaType = domain.NewError("unsupported_media_type", kindUnsupportedMediaType)
+	ErrTimeout              = domain.NewError("timeout", domain.KindUnavailable)
 )
 
 type errorBody struct {
@@ -29,15 +34,13 @@ type errorDetail struct {
 }
 
 func Decode(w http.ResponseWriter, r *http.Request, v any) error {
-	dec := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxBodyBytes))
-	dec.DisallowUnknownFields()
-	if err := dec.Decode(v); err != nil {
+	if mt, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type")); mt != "application/json" {
+		return ErrUnsupportedMediaType
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxBodyBytes)).Decode(v); err != nil {
 		if _, ok := errors.AsType[*http.MaxBytesError](err); ok {
 			return ErrBodyTooLarge
 		}
-		return ErrMalformedBody
-	}
-	if _, err := dec.Token(); !errors.Is(err, io.EOF) {
 		return ErrMalformedBody
 	}
 	return nil
@@ -79,6 +82,8 @@ func statusFor(kind domain.Kind) int {
 		return http.StatusNotFound
 	case domain.KindTooLarge:
 		return http.StatusRequestEntityTooLarge
+	case kindUnsupportedMediaType:
+		return http.StatusUnsupportedMediaType
 	case domain.KindUnavailable:
 		return http.StatusServiceUnavailable
 	default:

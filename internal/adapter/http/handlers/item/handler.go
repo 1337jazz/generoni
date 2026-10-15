@@ -61,6 +61,6 @@ func (h *ItemHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Location", "/items/"+strconv.FormatInt(created.ID, 10))
+	w.Header().Set("Location", r.URL.Path+"/"+strconv.FormatInt(created.ID, 10))
 	respond.JSON(w, r, http.StatusCreated, itemToResponse(created))
 }

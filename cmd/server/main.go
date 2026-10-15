@@ -28,6 +28,7 @@ func main() {
 	logger.Setup(cfg.LogLevel)
 
 	// Run with graceful shutdown
+	slog.Info("starting")
 	if err := run(cfg); err != nil {
 		slog.Error("server failed", "error", err)
 		os.Exit(1)
@@ -50,13 +51,14 @@ func run(cfg environment.Config) error {
 	// Configure the server
 	srv := httpadapter.NewServer(cfg, cntr)
 
-	// Configure the listener and start the server
+	// Configure the listener
 	listener, err := net.Listen("tcp", cfg.Addr)
 	if err != nil {
 		return err
 	}
 	slog.Info("listening", "addr", listener.Addr().String())
 
+	// Start the server in a goroutine
 	errc := make(chan error, 1)
 	go func() {
 		if err := srv.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {

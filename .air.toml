@@ -10,3 +10,7 @@ tmp_dir = "tmp"
 
 [misc]
   clean_on_exit = true
+  startup_banner = ""
+
+[log]
+  main_only = true
