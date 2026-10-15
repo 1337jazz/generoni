@@ -1,0 +1,23 @@
+# Build and dev output
+/bin/
+/tmp/
+*.test
+*.out
+go.work
+go.work.sum
+
+# Local data
+/data/
+*.db
+*.db-shm
+*.db-wal
+
+# Env files (keep the example)
+.env
+.env.*
+!.env.example
+
+# OS and editors
+.DS_Store
+.idea/
+.vscode/

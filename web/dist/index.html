@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Placeholder</title>
+</head>
+
+<body>
+	<h1>Your web app goes here</h1>
+	<p>
+		This page is a placeholder. The server is working and is serving the files in
+		<code>web/dist</code>. Replace this file with your frontend's build output.
+	</p>
+
+	<h2>Development</h2>
+	<p>
+		Use your framework's own tooling and dev server, no need to be at `localhost:8080/` in dev. Run the Go API
+		(<code>make dev</code>, port 8080) next to it, and call the API with relative URLs such
+		as <code>fetch('/api/v1/items')</code>.
+	</p>
+	<p>
+		Your dev server will run on another port, so tell it to proxy <code>/api</code> to the Go API, to skip
+		configuring urls for different environments.
+		With Vite, in <code>web/vite.config.ts</code>:
+	</p>
+	<pre><code>export default defineConfig({
+			server: { proxy: { '/api': 'http://localhost:8080' } },
+			})</code></pre>
+
+	<h2>Production</h2>
+	<p>
+		Build your app so its output lands in <code>web/dist</code>
+		(<code>npm run build</code> with Vite's default output directory). The build is embedded in
+		the Go binary, which then serves the app and the API from the same origin.
+	</p>
+
+	<p>The JSON API is under <code>/api/v1</code>, for example <a href="/api/v1/items"><code>/api/v1/items</code></a>.
+	</p>
+</body>
+
+</html>
