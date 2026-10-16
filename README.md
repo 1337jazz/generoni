@@ -4,8 +4,12 @@ An opinionated, production-(almost)-ready template for Go web apps (a JSON API p
 
 ## Usage
 
-1. Click **Use this template** to create your repo. A workflow renames the module path and
-   this title on the first push, then deletes itself.
+1. Click **Use this template** to create your repo. A workflow renames the module path
+   and replaces this README on first push, then deletes itself.
+
+   > ❗
+   > **Give it a moment to complete before cloning.** You'll know it's done when a new commit
+   > titled "Rename template to <your_repo_name>" appears after "Initial commit".
 2. Clone it. Optionally copy `.env.example` to `.env` to change the defaults (see `env.go`).
 3. Run `make dev` to start the server with hot reload on `:8080`.
 4. Try it:
@@ -69,7 +73,7 @@ back to `index.html` so client-side routes work.
 - **CSP:** `middleware/security.go` sends `default-src 'self'`. Loosen it if you load scripts or
   images from elsewhere.
 
-### API only? Remove it
+### Don't need a frontend? Remove it!
 
 1. Delete `web/` and `internal/adapter/http/spa.go`.
 2. Delete the `GET /api/` and `GET /` routes in `routes()` in `server.go`.

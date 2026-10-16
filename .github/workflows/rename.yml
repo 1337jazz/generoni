@@ -1,7 +1,7 @@
 name: rename
 
-# Runs once in a repo created from the template: renames the module path and the
-# README title to match the new repo, then deletes this workflow.
+# Runs once in a repo created from the template: renames the module path, replaces
+# the README with a stub titled after the new repo, then deletes this workflow.
 on:
   push:
     branches: [main]
@@ -21,7 +21,7 @@ jobs:
           module="github.com/${GITHUB_REPOSITORY,,}"
           find . -name '*.go' -exec sed -i "s|github.com/1337jazz/generoni|$module|g" {} +
           sed -i "s|github.com/1337jazz/generoni|$module|" go.mod
-          sed -i "1s|^# generoni\$|# ${GITHUB_REPOSITORY#*/}|" README.md
+          printf '# %s\n\nGenerated with [generoni](https://github.com/1337jazz/generoni)\n' "${GITHUB_REPOSITORY#*/}" > README.md
           git rm -q .github/workflows/rename.yml
           git -c user.name=github-actions[bot] -c user.email=github-actions[bot]@users.noreply.github.com commit -am "Rename template to $GITHUB_REPOSITORY"
           git push
